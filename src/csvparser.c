@@ -6,10 +6,16 @@
 size_t csv_count_columns(const char* line, char delim)
 {
     size_t delim_count = 0;
+    bool inside_quotes = false;
 
     for (size_t i = 0; i < strlen(line); ++i)
-        if (line[i] == delim)
+    {
+        if (line[i] == '\"')
+            inside_quotes = !inside_quotes;
+
+        if (line[i] == delim && !inside_quotes)
             delim_count++;
+    }
 
     return delim_count + 1; // + 1 since no delimiter at end of string
 }
@@ -17,7 +23,6 @@ size_t csv_count_columns(const char* line, char delim)
 // internal function
 // parses a line of CSV and stores parsed values into tokens
 // tokens must be free'd by the client
-// TODO: add support for delimiters within quotes to avoid parsing issues
 // returns number of tokens that were extracted. can be used by client when freeing memory
 size_t csv_parse_line(const char* line, char*** tokens, char delim)
 {
@@ -25,13 +30,18 @@ size_t csv_parse_line(const char* line, char*** tokens, char delim)
     char* parsed_value = NULL;
     size_t parsed_value_alloc_size = 0;
 
+    bool inside_quotes = false;
+
     size_t delim_count = csv_count_columns(line, delim);
 
     (*tokens) = malloc(sizeof(char*) * delim_count);
 
     for (size_t i = 0; i < strlen(line); ++i)
     {
-        if (line[i] != delim)
+        if (line[i] == '\"')
+            inside_quotes = !inside_quotes;
+
+        if (line[i] != delim || (line[i] == delim && inside_quotes))
         {
             if (parsed_value == NULL)
             {
@@ -41,7 +51,7 @@ size_t csv_parse_line(const char* line, char*** tokens, char delim)
             }
             else
             {
-                if (strlen(parsed_value) > parsed_value_alloc_size)
+                if (strlen(parsed_value) > parsed_value_alloc_size - 1)
                 {
                     parsed_value_alloc_size *= 2;
                     parsed_value = realloc(parsed_value, parsed_value_alloc_size + 1);
@@ -50,7 +60,7 @@ size_t csv_parse_line(const char* line, char*** tokens, char delim)
                 strncat(parsed_value, &line[i], 1);
             }
         }
-        else if (line[i] == delim)
+        else if (line[i] == delim && !inside_quotes)
         {
             if (parsed_value != NULL)
             {
