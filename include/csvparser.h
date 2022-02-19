@@ -144,13 +144,17 @@ void csv_read_column_by_index(const char* filename, size_t column_index, char***
 void csv_read_column_by_name(const char* filename, const char* column_name, char*** data, char delim, size_t* data_rows);
 
 /**
- * Free the memory allocated to data after reading a CSV file. This MUST be done if you intent on using the same pointer to read a different file.
+ * Free the memory allocated to data after reading a CSV file. This MUST be done if you intend on using the same pointer to read a different file.
  * @param data The address to a char*** pointer holding the CSV data loaded by csv_read().
  * @param data_dims Array of data dimensions with the 0th index counting the rows and 1st index counting the columns.
  */
 void csv_free(char**** data, size_t data_dims[2]);
 
-// inactive for now
+/**
+ * Free the memory allocated to data after reading a CSV file. This MUST be done if you intend on using the same pointer to read a different file.
+ * @param data The address to a char** pointer holding the CSV data loaded by csv_read_column().
+ * @param data_rows How many rows to free from the data.
+ */
 void csv_free_column(char*** data, size_t data_rows);
 
 #endif //CSVPARSER_CSVPARSER_H
