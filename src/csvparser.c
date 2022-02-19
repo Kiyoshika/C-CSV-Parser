@@ -52,23 +52,42 @@ size_t csv_parse_line(const char* line, char*** tokens, char delim)
         }
         else if (line[i] == delim)
         {
-            (*tokens)[current_col] = strdup(parsed_value);
-            free(parsed_value);
-            parsed_value = NULL;
+            if (parsed_value != NULL)
+            {
+                (*tokens)[current_col] = strdup(parsed_value);
+                free(parsed_value);
+                parsed_value = NULL;
+            }
+            else
+                (*tokens)[current_col] = strdup("(null)");
+
             parsed_value_alloc_size = 0;
             current_col++;
         }
     }
 
     // no delimiter at end of string so we check if parsed_value still contains content
-    if (strlen(parsed_value) > 0)
+    if (parsed_value != NULL && strlen(parsed_value) > 0)
     {
-        // remove trailing \n from input
-        parsed_value[strcspn(parsed_value, "\n")] = 0;
-
-        (*tokens)[current_col] = strdup(parsed_value);
-        free(parsed_value);
-        parsed_value = NULL;
+        // remove trailing \n from input (unless it's the only remaining character left)
+        // e.g in the case of val1,val2, (trailing comma at end)
+        if (strcmp(parsed_value, "\n") == 0)
+        {
+            (*tokens)[current_col] = strdup("(null)");
+            free(parsed_value);
+            parsed_value = NULL;
+        }
+        else
+        {
+            parsed_value[strcspn(parsed_value, "\n")] = 0;
+            (*tokens)[current_col] = strdup(parsed_value);
+            free(parsed_value);
+            parsed_value = NULL;
+        }
+    }
+    else if (parsed_value == NULL)
+    {
+        (*tokens)[current_col] = strdup("(null)");
     }
 
     return delim_count;
