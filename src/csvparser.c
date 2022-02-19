@@ -74,7 +74,7 @@ size_t csv_parse_line(const char* line, char*** tokens, char delim)
     return delim_count;
 }
 
-void csv_read(const char* filename, char**** data, size_t (*data_dims)[2], char delim, bool has_headers)
+void csv_read(const char* filename, char**** data, char delim, size_t (*data_dims)[2], bool has_headers)
 {
     FILE* file = fopen(filename, "r");
     if (file != NULL)
@@ -143,6 +143,94 @@ void csv_read(const char* filename, char**** data, size_t (*data_dims)[2], char 
     }
 }
 
+void csv_read_column_by_index(const char* filename, size_t column_index, char*** data, char delim, size_t* data_rows, bool has_headers)
+{
+    FILE* file = fopen(filename, "r");
+    if (file != NULL)
+    {
+        char* line = NULL;
+        char **tokens = NULL;
+        size_t len = 0;
+        size_t read = 0;
+
+        // start with allocating memory for 10 lines, then double each time capacity is reached
+        size_t row_allocation_size = 10;
+        (*data) = calloc(row_allocation_size, sizeof(char**));
+
+        size_t current_row = 0;
+        size_t n_tokens;
+
+        while ((read = getline(&line, &len, file)) != -1)
+        {
+
+            // skip header line if present
+            if (has_headers)
+            {
+                has_headers = false;
+                continue;
+            }
+
+            n_tokens = csv_parse_line(line, &tokens, delim);
+            (*data)[current_row] = strdup(tokens[column_index]);
+            for (size_t i = 0; i < n_tokens; ++i)
+            {
+                free(tokens[i]);
+                tokens[i] = NULL;
+            }
+
+            current_row++;
+            if (current_row >= row_allocation_size)
+            {
+                row_allocation_size *= 2;
+                (*data) = realloc((*data), sizeof(char**) * row_allocation_size);
+            }
+
+            // free tokens to use them on next iteration
+            free(tokens);
+            tokens = NULL;
+        }
+        free(line);
+        fclose(file);
+
+        // store row count
+        *data_rows = current_row;
+    }
+    else
+    {
+        printf("File not found!\n");
+        exit(-1);
+    }
+}
+
+void csv_read_column_by_name(const char* filename, const char* column_name, char*** data, char delim, size_t* data_rows)
+{
+    FILE* file = fopen(filename, "r");
+    if (file != NULL)
+    {
+        char** tokens = NULL;
+        char* line = NULL;
+        size_t len = 0;
+        size_t n_tokens;
+
+        getline(&line, &len, file);
+        n_tokens = csv_parse_line(line, &tokens, delim);
+
+        for (size_t i = 0; i < n_tokens; ++i)
+            if (strncmp(tokens[i], column_name, strlen(column_name)) == 0)
+                csv_read_column_by_index(filename, i, data, delim, data_rows, true);
+
+        free(line);
+        for (size_t i = 0; i < n_tokens; ++i)
+            free(tokens[i]);
+        free(tokens);
+    }
+    else
+    {
+        printf("File not found!\n");
+        exit(-1);
+    }
+}
+
 void csv_free(char**** data, size_t data_dims[2])
 {
     for (size_t i = 0; i < data_dims[0]; ++i)
@@ -157,4 +245,15 @@ void csv_free(char**** data, size_t data_dims[2])
     }
     free((*data));
     (*data) = NULL;
+}
+
+void csv_free_column(char*** data, size_t data_rows)
+{
+    for (size_t i = 0; i < data_rows; ++i)
+    {
+        free((*data)[i]);
+        (*data)[i] = NULL;
+    }
+    free(*data);
+    *data = NULL;
 }
