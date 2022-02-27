@@ -307,6 +307,36 @@ void csv_read_column_by_name_as_int(const char* filename, const char* column_nam
     csv_free_column(&s_data, *data_rows);
 }
 
+void csv_select_by_name(const char* filename, char** column_names, size_t n_columns, char**** data, char delim, size_t (*data_dims)[2])
+{
+    char** current_column = NULL;
+    size_t rows;
+    bool allocated = false;
+
+    for (size_t c = 0; c < n_columns; ++c)
+    {
+        csv_read_column_by_name(filename, column_names[c], &current_column, delim, &rows);
+
+        // allocate memory for user's data when number of rows is known
+        if (!allocated)
+        {
+            (*data) = calloc(rows, sizeof(char**));
+            for (size_t i = 0; i < rows; ++i)
+                (*data)[i] = calloc(n_columns, sizeof(char*));
+            allocated = true;
+        }
+
+        // copy data from column into user's data and free it back
+        for (size_t r = 0; r < rows; ++r)
+            (*data)[r][c] = strdup(current_column[r]);
+        csv_free_column(&current_column, rows);
+    }
+
+    (*data_dims)[0] = rows;
+    (*data_dims)[1] = n_columns;
+
+}
+
 void csv_data_to_int(char*** data, size_t data_dims[2], int*** int_data)
 {
     // allocate necessary memory to store the integers

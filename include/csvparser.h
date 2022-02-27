@@ -100,6 +100,18 @@ void csv_read_column_by_name_as_float(const char* filename, const char* column_n
  */
 void csv_read_column_by_name_as_int(const char* filename, const char* column_name, int** data, char delim, size_t* data_rows);
 
+void csv_select_by_name(const char* filename, char** column_names, size_t n_columns, char**** data, char delim, size_t (*data_dims)[2]);
+
+void csv_select_by_name_as_float(const char* filename, char** column_names, size_t n_columns, float*** data, char delim, size_t (*data_dims)[2]);
+
+void csv_select_by_name_as_int(const char* filename, char** column_names, size_t n_columns, int*** data, char delim, size_t (*data_dims)[2]);
+
+void csv_select_by_index(const char* filename, size_t* column_indices, size_t n_columns, char**** data, char delim, size_t (*data_dims)[2], bool has_headers);
+
+void csv_select_by_index_as_float(const char* filename, size_t* column_indices, size_t n_columns, float*** data, char delim, size_t (*data_dims)[2], bool has_headers);
+
+void csv_select_by_index_as_int(const char* filename, size_t* column_indices, size_t n_columns, int*** data, char delim, size_t (*data_dims)[2], bool has_headers);
+
 /**
  * @description Convert CSV data (char***) to integers (int**).
  * @param data A char*** pointer to data loaded with csv_read().
