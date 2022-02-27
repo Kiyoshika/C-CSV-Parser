@@ -103,7 +103,7 @@ size_t csv_parse_line(const char* line, char*** tokens, char delim)
     return delim_count;
 }
 
-void csv_read(const char* filename, char**** data, char delim, size_t (*data_dims)[2], bool has_headers)
+void csv_read(const char* filename, char**** data, size_t (*data_dims)[2], char delim, bool has_headers)
 {
     FILE* file = fopen(filename, "r");
     if (file != NULL)
@@ -172,6 +172,21 @@ void csv_read(const char* filename, char**** data, char delim, size_t (*data_dim
     }
 }
 
+void csv_read_int(const char* filename, int*** data, size_t (*data_dims)[2], char delim, bool has_headers)
+{
+    char*** s_data = NULL;
+    csv_read(filename, &s_data, data_dims, delim, has_headers);
+    csv_data_to_int(s_data, *data_dims, data);
+    csv_free(&s_data, *data_dims);
+}
+void csv_read_float(const char* filename, float*** data, size_t (*data_dims)[2], char delim, bool has_headers)
+{
+    char*** s_data = NULL;
+    csv_read(filename, &s_data, data_dims, delim, has_headers);
+    csv_data_to_float(s_data, *data_dims, data);
+    csv_free(&s_data, *data_dims);
+}
+
 void csv_read_column_by_index(const char* filename, size_t column_index, char*** data, char delim, size_t* data_rows, bool has_headers)
 {
     FILE* file = fopen(filename, "r");
@@ -231,6 +246,22 @@ void csv_read_column_by_index(const char* filename, size_t column_index, char***
     }
 }
 
+void csv_read_column_by_index_as_float(const char* filename, size_t column_index, float** data, char delim, size_t* data_rows, bool has_headers)
+{
+    char** s_data = NULL;
+    csv_read_column_by_index(filename, column_index, &s_data, delim, data_rows, has_headers);
+    csv_column_to_float(s_data, *data_rows, data);
+    csv_free_column(&s_data, *data_rows);
+}
+
+void csv_read_column_by_index_as_int(const char* filename, size_t column_index, int** data, char delim, size_t* data_rows, bool has_headers)
+{
+    char** s_data = NULL;
+    csv_read_column_by_index(filename, column_index, &s_data, delim, data_rows, has_headers);
+    csv_column_to_int(s_data, *data_rows, data);
+    csv_free_column(&s_data, *data_rows);
+}
+
 void csv_read_column_by_name(const char* filename, const char* column_name, char*** data, char delim, size_t* data_rows)
 {
     FILE* file = fopen(filename, "r");
@@ -260,31 +291,47 @@ void csv_read_column_by_name(const char* filename, const char* column_name, char
     }
 }
 
-void csv_data_to_int(char*** data, size_t (*data_dims)[2], int*** int_data)
+void csv_read_column_by_name_as_float(const char* filename, const char* column_name, float** data, char delim, size_t* data_rows)
+{
+    char** s_data = NULL;
+    csv_read_column_by_name(filename, column_name, &s_data, delim, data_rows);
+    csv_column_to_float(s_data, *data_rows, data);
+    csv_free_column(&s_data, *data_rows);
+}
+
+void csv_read_column_by_name_as_int(const char* filename, const char* column_name, int** data, char delim, size_t* data_rows)
+{
+    char** s_data = NULL;
+    csv_read_column_by_name(filename, column_name, &s_data, delim, data_rows);
+    csv_column_to_int(s_data, *data_rows, data);
+    csv_free_column(&s_data, *data_rows);
+}
+
+void csv_data_to_int(char*** data, size_t data_dims[2], int*** int_data)
 {
     // allocate necessary memory to store the integers
-    *int_data = malloc(sizeof(int*) * (*data_dims)[0]);
-    for (size_t i = 0; i < (*data_dims[0]); ++i)
-        (*int_data)[i] = malloc(sizeof(int) * (*data_dims)[1]);
+    *int_data = malloc(sizeof(int*) * data_dims[0]);
+    for (size_t i = 0; i < data_dims[0]; ++i)
+        (*int_data)[i] = malloc(sizeof(int) * data_dims[1]);
 
     // cast values from string to int
     char* end;
-    for (size_t i = 0; i < (*data_dims)[0]; ++i)
-        for (size_t j = 0; j < (*data_dims)[1]; ++j)
+    for (size_t i = 0; i < data_dims[0]; ++i)
+        for (size_t j = 0; j < data_dims[1]; ++j)
             (*int_data)[i][j] = strtol(data[i][j], &end, 10);
 }
 
-void csv_data_to_float(char*** data, size_t (*data_dims)[2], float*** float_data)
+void csv_data_to_float(char*** data, size_t data_dims[2], float*** float_data)
 {
     // allocate necessary memory to store the integers
-    *float_data = malloc(sizeof(float*) * (*data_dims)[0]);
-    for (size_t i = 0; i < (*data_dims[0]); ++i)
-        (*float_data)[i] = malloc(sizeof(float) * (*data_dims)[1]);
+    *float_data = malloc(sizeof(float*) * data_dims[0]);
+    for (size_t i = 0; i < data_dims[0]; ++i)
+        (*float_data)[i] = malloc(sizeof(float) * data_dims[1]);
 
     // cast values from string to int
     char* end;
-    for (size_t i = 0; i < (*data_dims)[0]; ++i)
-        for (size_t j = 0; j < (*data_dims)[1]; ++j)
+    for (size_t i = 0; i < data_dims[0]; ++i)
+        for (size_t j = 0; j < data_dims[1]; ++j)
             (*float_data)[i][j] = strtof(data[i][j], &end);
 }
 
