@@ -11,18 +11,6 @@ add_library(csvparser
         )
 target_include_directories(csvparser PUBLIC include/)
 
-set(INCLUDE_CAST
-        include/cast/cast.h)
-
-set(INCLUDE_FILES
-        include/cast/cast.h
-        include/free/free.h
-        include/ignore/ignore.h
-        include/read/read.h
-        include/select/select.h
-        include/csvinternal.h
-        include/csvparser.h)
-
 include(GNUInstallDirs)
 
 # root directory
