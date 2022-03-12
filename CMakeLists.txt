@@ -10,6 +10,13 @@ add_library(csvparser
         src/csvinternal.c
         )
 target_include_directories(csvparser PUBLIC include/)
+set_target_properties(csvparser PROPERTIES PUBLIC_HEADER include/csvparser.h)
+
+include(GNUInstallDirs)
+
+install(TARGETS csvparser
+        PUBLIC_HEADER
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/csvparser)
 
 #add_executable(csvtesting csv_testing.c)
 #target_link_libraries(csvtesting csvparser)
